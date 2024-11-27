@@ -1,6 +1,5 @@
 package com.hikadobushido.ecommerce_java.config.middleware;
-import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.errors.*;
 import com.hikadobushido.ecommerce_java.model.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,11 @@ import java.util.Map;
 @Slf4j
 public class GenericExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
+    @ExceptionHandler({
+            ResourceNotFoundException.class,
+            UserNotFoundException.class,
+            RoleNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public @ResponseBody ErrorResponse handlerResourceNotFoundException(HttpServletRequest req, ResourceNotFoundException exception) {
         return ErrorResponse.builder()
@@ -67,5 +70,22 @@ public class GenericExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(InvalidPasswordException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public @ResponseBody ErrorResponse handleUnauthorizedException(HttpServletRequest req, Exception exception) {
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.UNAUTHORIZED.value())
+                .message(exception.getMessage())
+                .timeStamp(LocalDateTime.now())
+                .build();
+    }
+
+    public @ResponseBody ErrorResponse handleConflictException(HttpServletRequest req, Exception exception) {
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.CONFLICT.value())
+                .message(exception.getMessage())
+                .timeStamp(LocalDateTime.now())
+                .build();
+    }
 
 }
