@@ -1,9 +1,17 @@
 package com.hikadobushido.ecommerce_java.config.middleware;
 import com.hikadobushido.ecommerce_java.common.errors.*;
 import com.hikadobushido.ecommerce_java.model.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -45,8 +53,24 @@ public class GenericExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public @ResponseBody ErrorResponse handlerGenericException(HttpServletRequest req, Exception exception) {
+    public @ResponseBody ErrorResponse handlerGenericException(HttpServletRequest req, HttpServletResponse resp, Exception exception) {
         log.error("Terjadi Error, status error: " + HttpStatus.INTERNAL_SERVER_ERROR + " error message: " + exception.getMessage());
+        if (exception instanceof BadCredentialsException ||
+                exception instanceof AccountStatusException ||
+                exception instanceof AccessDeniedException ||
+                exception instanceof SignatureException ||
+                exception instanceof ExpiredJwtException ||
+                exception instanceof AuthenticationException ||
+                exception instanceof InsufficientAuthenticationException
+        ) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return ErrorResponse.builder()
+                    .errorCode(HttpStatus.FORBIDDEN.value())
+                    .message(exception.getMessage())
+                    .timeStamp(LocalDateTime.now())
+                    .build();
+        }
+        resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         return ErrorResponse.builder()
                 .errorCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .message(exception.getMessage())

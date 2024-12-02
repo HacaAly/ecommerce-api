@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse register(UserRegisterRequest registerRequest) {
-        if (existsByUsername(registerRequest.getUsername())){
+        if (    existsByUsername(registerRequest.getUsername())){
             throw new UsernameAlreadyExistsException("Username is already taken");
         }
         if (existsByEmail(registerRequest.getEmail())){
@@ -126,18 +126,18 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id : " + id));
 
-        userRoleRepository.deleteByUserId(id);
+        userRoleRepository.deleteByIdUserId(id);
 
         userRepository.delete(user);
     }
 
     @Override
     public boolean existsByUsername(String username) {
-        return userRepository.existByUsername(username);
+        return userRepository.existsByUsername(username);
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return userRepository.existByEmail(email);
+        return userRepository.existsByEmail(email);
     }
 }
