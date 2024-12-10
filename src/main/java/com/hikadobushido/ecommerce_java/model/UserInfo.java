@@ -2,6 +2,8 @@ package com.hikadobushido.ecommerce_java.model;
 
 import com.hikadobushido.ecommerce_java.entity.Role;
 import com.hikadobushido.ecommerce_java.entity.User;
+import java.util.Collection;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-
-@Builder
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserInfo implements UserDetails {
@@ -28,6 +27,7 @@ public class UserInfo implements UserDetails {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .toList();
     }
+
     @Override
     public String getPassword() {
         return user.getPassword();

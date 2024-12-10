@@ -104,6 +104,11 @@ public class GenericExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler({
+            UsernameAlreadyExistsException.class,
+            EmailAlreadyExistsException.class
+    })
+    @ResponseStatus(HttpStatus.CONFLICT)
     public @ResponseBody ErrorResponse handleConflictException(HttpServletRequest req, Exception exception) {
         return ErrorResponse.builder()
                 .errorCode(HttpStatus.CONFLICT.value())
@@ -112,4 +117,13 @@ public class GenericExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(ForbiddenAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public @ResponseBody ErrorResponse handleForbiddenException(HttpServletRequest req, Exception exception) {
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.FORBIDDEN.value())
+                .message(exception.getMessage())
+                .timeStamp(LocalDateTime.now())
+                .build();
+    }
 }

@@ -1,5 +1,6 @@
 package com.hikadobushido.ecommerce_java.model;
 
+import com.hikadobushido.ecommerce_java.entity.User;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,4 +38,6 @@ public class ProductRequest {
 
     @NotEmpty(message = "Harus ada satu kategori yang dipilih")
     private List<Long> categoryIds;
+
+    private User user;
 }

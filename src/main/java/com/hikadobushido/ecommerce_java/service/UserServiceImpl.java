@@ -83,6 +83,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse updateUser(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id : " + id));
@@ -105,7 +106,7 @@ public class UserServiceImpl implements UserService {
             user.setUsername(request.getUsername());
         }
 
-        if (request.getEmail() != null && request.getEmail().equals(user.getEmail())) {
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             if (existsByEmail(request.getEmail())) {
                 throw new EmailAlreadyExistsException(
                         "Email " + request.getEmail() + " is already taken"

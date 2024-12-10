@@ -6,18 +6,17 @@ import com.hikadobushido.ecommerce_java.model.UserInfo;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import java.time.LocalDateTime;
+import java.util.Date;
+import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.time.LocalDateTime;
-import java.util.Date;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class JwtServiceImpl implements JwtService{
+public class JwtServiceImpl implements JwtService {
 
     private final JwtSecretConfig jwtSecretConfig;
     private final SecretKey signKey;
@@ -28,9 +27,9 @@ public class JwtServiceImpl implements JwtService{
         Date expirationDate = DateTimeUtil.convertLocalDateTimeToDate(expirationTime);
 
         return Jwts.builder()
-                .content(userInfo.getUsername())
-                .issuedAt(new Date())
-                .expiration(expirationDate)
+                .setSubject(userInfo.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(expirationDate)
                 .signWith(signKey)
                 .compact();
     }
@@ -39,9 +38,10 @@ public class JwtServiceImpl implements JwtService{
     public boolean validateToken(String token) {
         try {
             JwtParser parser = Jwts.parser()
-                    .decryptWith(signKey)
+                    .setSigningKey(signKey)
                     .build();
-            parser.parseSignedClaims(token);
+            parser.parseClaimsJws(token);
+
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.error(e.getMessage());
@@ -52,10 +52,10 @@ public class JwtServiceImpl implements JwtService{
     @Override
     public String getUsernameFromToken(String token) {
         JwtParser parser = Jwts.parser()
-                .decryptWith(signKey)
+                .setSigningKey(signKey)
                 .build();
-        return parser.parseSignedClaims(token)
-                .getPayload()
+        return parser.parseClaimsJws(token)
+                .getBody()
                 .getSubject();
     }
 }
