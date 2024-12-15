@@ -47,6 +47,13 @@ public class Order {
 
     @Column(name = "awb_number")
     private String awbNumber;
+    @Column(name = "xendit_invoice_id")
+    private String xenditInvoiceId;
+    @Column(name = "xendit_payment_method")
+    private String xenditPaymentMethod;
+    @Column(name = "xendit_payment_status")
+    private String xenditPaymentStatus;
+
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

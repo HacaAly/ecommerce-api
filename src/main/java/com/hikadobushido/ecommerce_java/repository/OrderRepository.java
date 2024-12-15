@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -21,5 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         AND order_date BETWEEN :startDate AND :endDate
         """, nativeQuery = true)
     List<Order> findByUserIdAndDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+
+    Optional<Order> findByXenditInvoiceId(String xenditInvoiceId);
 
 }
