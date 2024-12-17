@@ -29,7 +29,7 @@ public class ApiSecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> {
-                    registry.requestMatchers("/auth/**", "/api-docs/**", "/swagger-ui/**")
+                    registry.requestMatchers("/auth/**", "/api-docs/**", "/swagger-ui/**", "/webhook/xendit")
                             .permitAll().anyRequest().authenticated();
                 }).sessionManagement(configurer -> {
                     configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS);

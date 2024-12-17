@@ -1,5 +1,6 @@
 package com.hikadobushido.ecommerce_java.entity;
 
+import com.hikadobushido.ecommerce_java.model.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +41,8 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
     @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;

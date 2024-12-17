@@ -1,10 +1,8 @@
 package com.hikadobushido.ecommerce_java.controller;
 
+import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
 import com.hikadobushido.ecommerce_java.entity.Order;
-import com.hikadobushido.ecommerce_java.model.CheckoutRequest;
-import com.hikadobushido.ecommerce_java.model.OrderItemResponse;
-import com.hikadobushido.ecommerce_java.model.OrderResponse;
-import com.hikadobushido.ecommerce_java.model.UserInfo;
+import com.hikadobushido.ecommerce_java.model.*;
 import com.hikadobushido.ecommerce_java.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -32,8 +30,7 @@ public class OrderController {
         UserInfo userInfo = (UserInfo)authentication.getPrincipal();
 
         checkoutRequest.setUserId(userInfo.getUser().getUserId());
-        Order order = orderService.checkout(checkoutRequest);
-        OrderResponse orderResponse = OrderResponse.fromOrder(order);
+        OrderResponse orderResponse = orderService.checkout(checkoutRequest);
         return ResponseEntity.ok(orderResponse);
     }
 
@@ -81,11 +78,16 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<Void> updateOrderStatus(
-            @PathVariable Long orderId,
-            @RequestParam String newStatus
-            ) {
-        orderService.updateOrderStatus(orderId, newStatus);
+    public ResponseEntity<Void> updateOrderStatus(@PathVariable Long orderId,
+                                                  @RequestParam String newStatus
+    ) {
+        OrderStatus status;
+        try {
+            status = OrderStatus.valueOf(newStatus);
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Unrecognize status :" + newStatus);
+        }
+        orderService.updateOrderStatus(orderId, status);
         return ResponseEntity.ok().build();
     }
 

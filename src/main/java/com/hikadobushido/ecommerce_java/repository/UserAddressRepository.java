@@ -14,12 +14,14 @@ public interface UserAddressRepository extends JpaRepository<UserAddress, Long> 
 
     List<UserAddress> findByUserId(Long userId);
 
-    @Query(value = """
-         UPDATE user_addresses SET is_default = false
-         WHERE user_id = :userId
-         """, nativeQuery = true)
-    @Modifying
     Optional<UserAddress> findByUserIdAndIsDefaultTrue(Long userId);
+
+    @Query(value = """
+      UPDATE user_addresses SET is_default = false
+      WHERE user_id = :userId
+      """, nativeQuery = true)
+    @Modifying
+    void resetUserDefaultAddress(Long userId);
 
     @Query(value = """
          UPDATE user_addresses SET is_default = true

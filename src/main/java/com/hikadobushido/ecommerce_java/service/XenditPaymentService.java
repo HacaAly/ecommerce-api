@@ -3,6 +3,7 @@ package com.hikadobushido.ecommerce_java.service;
 import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.Order;
 import com.hikadobushido.ecommerce_java.entity.User;
+import com.hikadobushido.ecommerce_java.model.OrderStatus;
 import com.hikadobushido.ecommerce_java.model.PaymentNotification;
 import com.hikadobushido.ecommerce_java.model.PaymentResponse;
 import com.hikadobushido.ecommerce_java.repository.OrderRepository;
@@ -88,16 +89,16 @@ public class XenditPaymentService implements PaymentService{
         order.setXenditPaymentStatus(status);
         switch (status) {
             case "PAID":
-                order.setStatus("PAID");
+                order.setStatus(OrderStatus.PAID);
                 break;
             case "EXPIRED":
-                order.setStatus("CANCELLED");
+                order.setStatus(OrderStatus.CANCELLED);
                 break;
             case "FAILED":
-                order.setStatus("PAYMENT_FAILED");
+                order.setStatus(OrderStatus.PAYMENT_FAILED);
                 break;
             case "PENDING":
-                order.setStatus("PENDING");
+                order.setStatus(OrderStatus.PENDING);
                 break;
             default:
         }

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class UserAddress {
 
     @Id
-    @Column(name = "user_address_id")
+    @Column(name = "user_adress_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userAddressId;
 
@@ -52,6 +52,6 @@ public class UserAddress {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "created_at")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

@@ -1,15 +1,18 @@
 package com.hikadobushido.ecommerce_java.service;
 
+import com.hikadobushido.ecommerce_java.common.OrderStateTransition;
 import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.*;
-import com.hikadobushido.ecommerce_java.model.CheckoutRequest;
-import com.hikadobushido.ecommerce_java.model.OrderItemResponse;
-import com.hikadobushido.ecommerce_java.model.ShippingRateRequest;
-import com.hikadobushido.ecommerce_java.model.ShippingRateResponse;
+import com.hikadobushido.ecommerce_java.model.*;
 import com.hikadobushido.ecommerce_java.repository.*;
+import com.xendit.exception.XenditException;
+import com.xendit.model.Invoice;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,30 +35,32 @@ public class OrderServiceImpl implements OrderService{
     private final UserAddressRepository userAddressRepository;
     private final ProductRepository productRepository;
     private final ShippingService shippingService;
+    private final PaymentService paymentService;
 
     private final BigDecimal TAX_RATE = BigDecimal.valueOf(0.03);
 
 
     @Override
     @Transactional
-    public Order checkout(CheckoutRequest checkoutRequest) {
-
+    public OrderResponse checkout(CheckoutRequest checkoutRequest) {
         List<CartItem> selectedItems = cartItemRepository.findAllById(
                 checkoutRequest.getSelectedCartItemIds());
-
         if (selectedItems.isEmpty()) {
             throw new ResourceNotFoundException("No cart items found for checkout");
         }
 
         UserAddress shippingAddress = userAddressRepository.findById(checkoutRequest.getUserAddressId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Shipping address with id " +checkoutRequest.getUserAddressId()+ " is not found" ));
+                        "Shipping address with id " + checkoutRequest.getUserAddressId() + " is not found"));
 
-        // request is validate
+        Map<Long, Integer> productQuantities = selectedItems.stream()
+                .collect(Collectors.toMap(CartItem::getProductId, CartItem::getQuantity));
+
+        // request is validated
 
         Order newOrder = Order.builder()
                 .userId(checkoutRequest.getUserId())
-                .status("PENDING")
+                .status(OrderStatus.PENDING)
                 .orderDate(LocalDateTime.now())
                 .totalAmount(BigDecimal.ZERO)
                 .taxFee(BigDecimal.ZERO)
@@ -81,8 +86,9 @@ public class OrderServiceImpl implements OrderService{
 
         cartItemRepository.deleteAll(selectedItems);
 
-        BigDecimal subTotal = orderItems.stream()
-                .map(orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+        BigDecimal subtotal = orderItems.stream()
+                .map(
+                        orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal shippingFee = orderItems.stream()
@@ -101,7 +107,7 @@ public class OrderServiceImpl implements OrderService{
 
                     BigDecimal totalWeight = product.get().getWeight()
                             .multiply(BigDecimal.valueOf(orderItem.getQuantity()));
-                    //calculate shipping rate
+                    // calculate shipping rate
                     ShippingRateRequest rateRequest = ShippingRateRequest.builder()
                             .totalWeightInGrams(totalWeight)
                             .fromAddress(ShippingRateRequest.fromUserAddress(sellerAddress.get()))
@@ -110,17 +116,42 @@ public class OrderServiceImpl implements OrderService{
                     ShippingRateResponse rateResponse = shippingService.calculateShippingRate(rateRequest);
                     return rateResponse.getShippingFee();
                 })
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal taxFee = subTotal.multiply(TAX_RATE);
-        BigDecimal totalAmount = subTotal.add(taxFee).add(shippingFee);
+        BigDecimal taxFee = subtotal.multiply(TAX_RATE);
+        BigDecimal totalAmount = subtotal.add(taxFee).add(shippingFee);
 
-        savedOrder.setTotalAmount(subTotal);
+        savedOrder.setSubtotal(subtotal);
         savedOrder.setShippingFee(shippingFee);
         savedOrder.setTaxFee(taxFee);
         savedOrder.setTotalAmount(totalAmount);
 
-        return orderRepository.save(savedOrder);
+        orderRepository.save(savedOrder);
+
+        // interact with xendit api
+        // generate payment url
+        String paymentUrl;
+
+        try {
+            PaymentResponse paymentResponse = paymentService.create(savedOrder);
+            savedOrder.setXenditInvoiceId(paymentResponse.getXenditInvoiceId());
+            savedOrder.setXenditPaymentStatus(paymentResponse.getXenditInvoiceStatus());
+            paymentUrl = paymentResponse.getXenditPaymentUrl();
+
+            orderRepository.save(savedOrder);
+        } catch (Exception ex) {
+            log.error("Payment creation for order: " + savedOrder.getOrderId() + " is failed. Reason:"
+                    + ex.getMessage());
+            savedOrder.setStatus(OrderStatus.PAYMENT_FAILED);
+
+            orderRepository.save(savedOrder);
+            return OrderResponse.fromOrder(savedOrder);
+        }
+
+        OrderResponse orderResponse = OrderResponse.fromOrder(savedOrder);
+        orderResponse.setPaymentUrl(paymentUrl);
+
+        return orderResponse;
     }
 
     @Override
@@ -134,7 +165,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
-    public List<Order> findOrdersByStatus(String status) {
+    public List<Order> findOrdersByStatus(OrderStatus status) {
         return orderRepository.findByStatus(status);
     }
 
@@ -144,17 +175,23 @@ public class OrderServiceImpl implements OrderService{
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Order with id : " + orderId + " not found")
                 );
-        if (!"PENDING".equals(order.getStatus())) {
-            throw new IllegalStateException("Only PENDING orders can be cancelled");
+
+        if (!OrderStateTransition.isValidTransition(order.getStatus(), OrderStatus.CANCELLED)) {
+                throw new IllegalStateException("Only PENDING orders can be cancelled");
         }
 
-        order.setStatus("CANCELLED");
+        order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
+
+        
+        if (order.equals(OrderStatus.CANCELLED)) {
+                cancelXenditInvoice(order);
+        }
     }
 
     @Override
     public List<OrderItemResponse> findByOrderItemsByOrderId(Long orderId) {
-        List<OrderItem> orderItems = orderItemRepository.finByOrderId(orderId);
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
         if (orderItems.isEmpty()) {
             return Collections.emptyList();
         }
@@ -196,17 +233,53 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     @Transactional
-    public void updateOrderStatus(Long orderId, String newStatus) {
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Order with id " + orderId + " not found"));
 
+        if (!OrderStateTransition.isValidTransition(order.getStatus(), newStatus)) {
+                throw new IllegalStateException("Order with current status "+order.getStatus() + " cannot be update into "
+                + newStatus );
+        }
+
         order.setStatus(newStatus);
         orderRepository.save(order);
+
+        if (newStatus.equals(OrderStatus.CANCELLED)) {
+                cancelXenditInvoice(order);
+        }
     }
 
     @Override
     public Double calculateOrderTotal(Long orderId) {
         return orderItemRepository.calculateTotalOrder(orderId);
+    }
+
+    private void cancelXenditInvoice(Order order) {
+        try {
+                Invoice invoice = Invoice.expire(order.getXenditInvoiceId());
+
+                order.setXenditPaymentStatus(invoice.getStatus());
+                orderRepository.save(order);
+        } catch (XenditException e) {
+                log.error("error while request invoice cancellation for order with xendit id " 
+                + order.getXenditInvoiceId() );
+        }
+    }
+
+    @Scheduled(cron = "0 0/1 * 1/1 * ? *")
+    @Transactional
+    public void cancelUnpaidOrder() {
+        LocalDateTime cancelThreshold = LocalDateTime.now().minusDays(1);
+        List<Order> unpaidOrders = orderRepository.findByStatusAndOrderDateBefore(OrderStatus.PENDING, 
+        cancelThreshold);
+
+        for (Order order : unpaidOrders) {
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+
+                cancelXenditInvoice(order);
+        }
     }
 }
