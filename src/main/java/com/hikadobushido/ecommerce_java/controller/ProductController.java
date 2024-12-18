@@ -1,5 +1,6 @@
 package com.hikadobushido.ecommerce_java.controller;
 
+import com.hikadobushido.ecommerce_java.common.PageUtil;
 import com.hikadobushido.ecommerce_java.model.PaginatedProductResponse;
 import com.hikadobushido.ecommerce_java.model.ProductRequest;
 import com.hikadobushido.ecommerce_java.model.ProductResponse;
@@ -43,15 +44,7 @@ public class ProductController {
     @RequestParam(defaultValue = "product_id, asc") String[] sort,
     @RequestParam(required = false) String name
     ) {
-        List<Sort.Order> orders = new ArrayList<>();
-        if (sort[0].contains(",")) {
-            for (String sortOrder : sort) {
-                String[] _sort = sortOrder.split(",");
-                orders.add(new Sort.Order(getSortDirection(_sort[1]),(_sort[0])));
-            }
-        }else {
-            orders.add(new Sort.Order(getSortDirection(sort[1]),(sort[0])));
-        }
+        List<Sort.Order> orders = PageUtil.parseSortOrderRequest(sort);
         Pageable pageable = PageRequest.of(page, size, Sort.by(orders));
         Page<ProductResponse> productResponses;
 
@@ -92,13 +85,4 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    private Sort.Direction getSortDirection(String direction) {
-        if (direction.equals("asc")) {
-            return Direction.ASC;
-        } else if (direction.equals("desc")) {
-            return Direction.DESC;
-        }
-
-        return Direction.ASC;
-    }
 }

@@ -12,6 +12,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -282,4 +284,16 @@ public class OrderServiceImpl implements OrderService{
                 cancelXenditInvoice(order);
         }
     }
+
+@Override
+public Page<OrderResponse> findOrdersByUserIdAndPageable(Long userId, Pageable pageable) {
+     return orderRepository.findByUserIdByPageable(userId, pageable)
+        .map(OrderResponse::fromOrder);
+}
+
+@Override
+public PaginatedOrderResponse convertOrderPage(Page<OrderResponse> orderResponses) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'convertOrderPage'");
+}
 }

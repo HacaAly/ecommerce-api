@@ -1,5 +1,6 @@
 package com.hikadobushido.ecommerce_java.controller;
 
+import com.hikadobushido.ecommerce_java.common.PageUtil;
 import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
 import com.hikadobushido.ecommerce_java.entity.Order;
 import com.hikadobushido.ecommerce_java.model.*;
@@ -7,6 +8,11 @@ import com.hikadobushido.ecommerce_java.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -53,16 +59,24 @@ public class OrderController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<OrderResponse>> findOrdersByUserId(){
+    public ResponseEntity<PaginatedOrderResponse> findOrdersByUserId(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "order_id,desc") String[] sort
+    ){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserInfo userInfo = (UserInfo) authentication.getPrincipal();
 
-        List<Order> userOrders = orderService.findOrdersByUserId(userInfo.getUser().getUserId());
-        List<OrderResponse> orderResponse = userOrders.stream()
-                .map(OrderResponse::fromOrder)
-                .toList();
+        List<Sort.Order> sortOrders = PageUtil.parseSortOrderRequest(sort);
 
-        return ResponseEntity.ok(orderResponse);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortOrders));
+
+        Page<OrderResponse> userOrders = orderService.findOrdersByUserIdAndPageable(userInfo.getUser()
+            .getUserId(), pageable);
+
+            PaginatedOrderResponse paginatedOrderResponse = orderService.convertOrderPage(userOrders);
+            
+        return ResponseEntity.ok(paginatedOrderResponse);
     }
 
     @GetMapping("/{orderId}/cancel")

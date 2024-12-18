@@ -5,9 +5,13 @@ import com.hikadobushido.ecommerce_java.model.CheckoutRequest;
 import com.hikadobushido.ecommerce_java.model.OrderItemResponse;
 import com.hikadobushido.ecommerce_java.model.OrderResponse;
 import com.hikadobushido.ecommerce_java.model.OrderStatus;
+import com.hikadobushido.ecommerce_java.model.PaginatedOrderResponse;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface OrderService {
 
@@ -16,6 +20,8 @@ public interface OrderService {
     Optional<Order> findOrderById(Long orderId);
 
     List<Order> findOrdersByUserId(Long userId);
+
+    Page<OrderResponse> findOrdersByUserIdAndPageable(Long userId, Pageable pageable);
 
     List<Order> findOrdersByStatus(OrderStatus status);
 
@@ -26,4 +32,6 @@ public interface OrderService {
     void updateOrderStatus(Long orderId, OrderStatus newStatus);
 
     Double calculateOrderTotal(Long orderId);
+
+    PaginatedOrderResponse convertOrderPage(Page<OrderResponse> orderResponses);
 }
