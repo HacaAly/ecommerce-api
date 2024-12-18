@@ -186,7 +186,7 @@ public class OrderServiceImpl implements OrderService{
         orderRepository.save(order);
 
         
-        if (order.equals(OrderStatus.CANCELLED)) {
+        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
                 cancelXenditInvoice(order);
         }
     }
@@ -270,7 +270,7 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-    @Scheduled(cron = "0 0/1 * 1/1 * ? *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void cancelUnpaidOrder() {
         LocalDateTime cancelThreshold = LocalDateTime.now().minusDays(1);
@@ -285,15 +285,21 @@ public class OrderServiceImpl implements OrderService{
         }
     }
 
-@Override
-public Page<OrderResponse> findOrdersByUserIdAndPageable(Long userId, Pageable pageable) {
-     return orderRepository.findByUserIdByPageable(userId, pageable)
+    @Override
+    public Page<OrderResponse> findOrdersByUserIdAndPageable(Long userId, Pageable pageable) {
+        return orderRepository.findByUserIdByPageable(userId, pageable)
         .map(OrderResponse::fromOrder);
-}
+    }
 
-@Override
-public PaginatedOrderResponse convertOrderPage(Page<OrderResponse> orderResponses) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'convertOrderPage'");
-}
+        @Override
+        public PaginatedOrderResponse convertOrderPage(Page<OrderResponse> orderResponses) {
+        return PaginatedOrderResponse.builder()
+        .data(orderResponses.getContent())
+        .pageNo(orderResponses.getNumber())
+        .pageSize(orderResponses.getSize())
+        .totalElements(orderResponses.getTotalElements())
+        .totalPages(orderResponses.getTotalPages())
+        .last(orderResponses.isLast())
+        .build();
+        }
 }

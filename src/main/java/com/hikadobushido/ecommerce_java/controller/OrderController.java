@@ -2,7 +2,6 @@ package com.hikadobushido.ecommerce_java.controller;
 
 import com.hikadobushido.ecommerce_java.common.PageUtil;
 import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
-import com.hikadobushido.ecommerce_java.entity.Order;
 import com.hikadobushido.ecommerce_java.model.*;
 import com.hikadobushido.ecommerce_java.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -73,9 +72,8 @@ public class OrderController {
 
         Page<OrderResponse> userOrders = orderService.findOrdersByUserIdAndPageable(userInfo.getUser()
             .getUserId(), pageable);
-
-            PaginatedOrderResponse paginatedOrderResponse = orderService.convertOrderPage(userOrders);
-            
+    
+        PaginatedOrderResponse paginatedOrderResponse = orderService.convertOrderPage(userOrders);
         return ResponseEntity.ok(paginatedOrderResponse);
     }
 

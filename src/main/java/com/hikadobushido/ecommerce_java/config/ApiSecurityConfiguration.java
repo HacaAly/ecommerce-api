@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @Configuration
@@ -30,16 +31,21 @@ public class ApiSecurityConfiguration {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> {
                     registry.requestMatchers("/auth/**", "/api-docs/**", "/swagger-ui/**", "/webhook/xendit")
-                            .permitAll().anyRequest().authenticated();
+                            .permitAll()
+                            .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                            .anyRequest().authenticated();
                 }).sessionManagement(configurer -> {
                     configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 }).authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(configurer -> configurer.authenticationEntryPoint(
+                .exceptionHandling(configurer ->
+                     configurer.authenticationEntryPoint(
                         (request, response, authExcepiton) -> {
                             throw authExcepiton;
-                        }
-                ))
+                        })
+                        .accessDeniedHandler((request, response, accesDeniedException) -> {
+                            throw accesDeniedException;
+                        }))
                 .build();
     }
 
