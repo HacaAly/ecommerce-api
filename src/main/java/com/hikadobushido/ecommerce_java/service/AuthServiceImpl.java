@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.InvalidPasswordException;
+import com.hikadobushido.ecommerce_java.common.exception.InvalidPasswordException;
 import com.hikadobushido.ecommerce_java.model.AuthRequest;
 import com.hikadobushido.ecommerce_java.model.UserInfo;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.controller;
 
-import com.hikadobushido.ecommerce_java.common.errors.ForbiddenAccessException;
+import com.hikadobushido.ecommerce_java.common.exception.ForbiddenAccessException;
 import com.hikadobushido.ecommerce_java.model.UserInfo;
 import com.hikadobushido.ecommerce_java.model.UserResponse;
 import com.hikadobushido.ecommerce_java.model.UserUpdateRequest;

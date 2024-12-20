@@ -1,7 +1,7 @@
 package com.hikadobushido.ecommerce_java.controller;
 
 import com.hikadobushido.ecommerce_java.common.PageUtil;
-import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
+import com.hikadobushido.ecommerce_java.common.exception.BadRequestException;
 import com.hikadobushido.ecommerce_java.model.*;
 import com.hikadobushido.ecommerce_java.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

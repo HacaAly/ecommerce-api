@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.*;
+import com.hikadobushido.ecommerce_java.common.exception.*;
 import com.hikadobushido.ecommerce_java.entity.Role;
 import com.hikadobushido.ecommerce_java.entity.User;
 import com.hikadobushido.ecommerce_java.entity.UserRole;

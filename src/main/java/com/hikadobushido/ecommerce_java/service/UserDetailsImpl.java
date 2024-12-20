@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.UserNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.UserNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.Role;
 import com.hikadobushido.ecommerce_java.entity.User;
 import com.hikadobushido.ecommerce_java.model.UserInfo;

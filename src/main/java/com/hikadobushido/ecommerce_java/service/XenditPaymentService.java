@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.Order;
 import com.hikadobushido.ecommerce_java.entity.User;
 import com.hikadobushido.ecommerce_java.model.OrderStatus;

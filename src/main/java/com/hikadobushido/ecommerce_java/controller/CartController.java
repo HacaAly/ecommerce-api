@@ -1,6 +1,6 @@
 package com.hikadobushido.ecommerce_java.controller;
 
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.model.AddToCartRequest;
 import com.hikadobushido.ecommerce_java.model.CartItemResponse;
 import com.hikadobushido.ecommerce_java.model.UpdateCartItemRequest;

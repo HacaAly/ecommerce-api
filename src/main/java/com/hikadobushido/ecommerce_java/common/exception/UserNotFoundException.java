@@ -1,4 +1,4 @@
-package com.hikadobushido.ecommerce_java.common.errors;
+package com.hikadobushido.ecommerce_java.common.exception;
 
 public class UserNotFoundException extends RuntimeException{
     public UserNotFoundException(String message) {

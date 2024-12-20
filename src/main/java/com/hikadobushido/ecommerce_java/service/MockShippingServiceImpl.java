@@ -1,7 +1,7 @@
 package com.hikadobushido.ecommerce_java.service;
 
 import com.hikadobushido.ecommerce_java.common.OrderStateTransition;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.Order;
 import com.hikadobushido.ecommerce_java.entity.OrderItem;
 import com.hikadobushido.ecommerce_java.entity.Product;

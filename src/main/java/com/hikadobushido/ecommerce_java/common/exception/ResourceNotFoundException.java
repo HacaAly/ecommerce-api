@@ -1,4 +1,4 @@
-package com.hikadobushido.ecommerce_java.common.errors;
+package com.hikadobushido.ecommerce_java.common.exception;
 
 public class ResourceNotFoundException extends RuntimeException{
     public ResourceNotFoundException(String message) {

@@ -1,8 +1,9 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
-import com.hikadobushido.ecommerce_java.common.errors.ForbiddenAccessException;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.BadRequestException;
+import com.hikadobushido.ecommerce_java.common.exception.ForbiddenAccessException;
+import com.hikadobushido.ecommerce_java.common.exception.InventoryException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.Cart;
 import com.hikadobushido.ecommerce_java.entity.CartItem;
 import com.hikadobushido.ecommerce_java.entity.Product;
@@ -39,12 +40,16 @@ public class CartServiceImpl implements CartService {
                     return cartRepository.save(newCart);
                 });
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdWithPessimisticLock(productId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("product with id " + productId + " is not found"));
 
         if (Objects.equals(product.getUserId(), userId)) {
             throw new BadRequestException("Cannot add your own product to cart");
+        }
+
+        if (product.getStockQuantity() <= 0) {
+            throw new InventoryException("Product stock is equal or below zero");
         }
 
         Optional<CartItem> existingItemOpt = cartItemRepository.findByCartIdAndProductId(

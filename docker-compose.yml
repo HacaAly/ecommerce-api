@@ -12,11 +12,21 @@ services:
       - SPRING_DATASOURCE_PASSWORD=passworduntukecommerce1234)(*
     depends_on:
       - db
+      - redis
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
+
+  redis :
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: always
 
   db:
     image: postgres:13
@@ -31,3 +41,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

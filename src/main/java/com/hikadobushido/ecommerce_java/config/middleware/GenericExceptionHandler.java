@@ -1,5 +1,5 @@
 package com.hikadobushido.ecommerce_java.config.middleware;
-import com.hikadobushido.ecommerce_java.common.errors.*;
+import com.hikadobushido.ecommerce_java.common.exception.*;
 import com.hikadobushido.ecommerce_java.model.ErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -41,7 +41,7 @@ public class GenericExceptionHandler {
                 .build();
     }
 
-    @ExceptionHandler(BadRequestException.class)
+    @ExceptionHandler({BadRequestException.class, InventoryException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public @ResponseBody ErrorResponse handlerBadRequestException(HttpServletRequest req, BadRequestException exception) {
         return ErrorResponse.builder()

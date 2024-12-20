@@ -1,10 +1,11 @@
 package com.hikadobushido.ecommerce_java.controller;
 
-import com.hikadobushido.ecommerce_java.common.errors.BadRequestException;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.hikadobushido.ecommerce_java.common.exception.BadRequestException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 
 @RestController
 public class HelloController {

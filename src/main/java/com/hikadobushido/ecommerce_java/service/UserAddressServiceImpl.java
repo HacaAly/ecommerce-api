@@ -1,7 +1,7 @@
 package com.hikadobushido.ecommerce_java.service;
 
-import com.hikadobushido.ecommerce_java.common.errors.ForbiddenAccessException;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.ForbiddenAccessException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.UserAddress;
 import com.hikadobushido.ecommerce_java.model.UserAddressRequest;
 import com.hikadobushido.ecommerce_java.model.UserAddressResponse;

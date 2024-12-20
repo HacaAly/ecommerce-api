@@ -1,7 +1,8 @@
 package com.hikadobushido.ecommerce_java.service;
 
 import com.hikadobushido.ecommerce_java.common.OrderStateTransition;
-import com.hikadobushido.ecommerce_java.common.errors.ResourceNotFoundException;
+import com.hikadobushido.ecommerce_java.common.exception.InventoryException;
+import com.hikadobushido.ecommerce_java.common.exception.ResourceNotFoundException;
 import com.hikadobushido.ecommerce_java.entity.*;
 import com.hikadobushido.ecommerce_java.model.*;
 import com.hikadobushido.ecommerce_java.repository.*;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService{
     private final ProductRepository productRepository;
     private final ShippingService shippingService;
     private final PaymentService paymentService;
+    private final InventoryService inventoryService;
 
     private final BigDecimal TAX_RATE = BigDecimal.valueOf(0.03);
 
@@ -57,6 +59,10 @@ public class OrderServiceImpl implements OrderService{
 
         Map<Long, Integer> productQuantities = selectedItems.stream()
                 .collect(Collectors.toMap(CartItem::getProductId, CartItem::getQuantity));
+
+        if (!inventoryService.checkAndLockInventory(productQuantities)) {
+            throw new InventoryException("Insufficient inventory for one or more products");
+        }
 
         // request is validated
 
@@ -141,6 +147,7 @@ public class OrderServiceImpl implements OrderService{
             paymentUrl = paymentResponse.getXenditPaymentUrl();
 
             orderRepository.save(savedOrder);
+            inventoryService.decreaseQuantity(productQuantities);
         } catch (Exception ex) {
             log.error("Payment creation for order: " + savedOrder.getOrderId() + " is failed. Reason:"
                     + ex.getMessage());
@@ -182,12 +189,16 @@ public class OrderServiceImpl implements OrderService{
                 throw new IllegalStateException("Only PENDING orders can be cancelled");
         }
 
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        Map<Long, Integer> productQuantities = orderItems.stream()
+                        .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
-        
         if (order.getStatus().equals(OrderStatus.CANCELLED)) {
                 cancelXenditInvoice(order);
+                inventoryService.increaseQuantity(productQuantities);
         }
     }
 
@@ -250,6 +261,10 @@ public class OrderServiceImpl implements OrderService{
 
         if (newStatus.equals(OrderStatus.CANCELLED)) {
                 cancelXenditInvoice(order);
+                List<OrderItem>  orderItems  = orderItemRepository.findByOrderId(orderId);
+                Map<Long, Integer> productQuantities = orderItems.stream()
+                        .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+                inventoryService.increaseQuantity(productQuantities);
         }
     }
 
