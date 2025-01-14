@@ -1,6 +1,7 @@
 package com.hikadobushido.ecommerce_java.config.middleware;
 import com.hikadobushido.ecommerce_java.common.exception.*;
 import com.hikadobushido.ecommerce_java.model.ErrorResponse;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -122,6 +123,16 @@ public class GenericExceptionHandler {
     public @ResponseBody ErrorResponse handleForbiddenException(HttpServletRequest req, Exception exception) {
         return ErrorResponse.builder()
                 .errorCode(HttpStatus.FORBIDDEN.value())
+                .message(exception.getMessage())
+                .timeStamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleRateLimitException(HttpServletRequest req, Exception exception) {
+        return ErrorResponse.builder()
+                .errorCode(HttpStatus.TOO_MANY_REQUESTS.value())
                 .message(exception.getMessage())
                 .timeStamp(LocalDateTime.now())
                 .build();

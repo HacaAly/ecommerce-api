@@ -8,12 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(SnakeCaseStrategy.class)
-public class UserAddressResponse {
+public class UserAddressResponse implements Serializable {
 
     private Long userAddressId;
     private String addressName;

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.hikadobushido.ecommerce_java.entity.Role;
 import com.hikadobushido.ecommerce_java.entity.User;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonNaming(SnakeCaseStrategy.class)
 public class UserResponse implements Serializable {
     private Long userId;
